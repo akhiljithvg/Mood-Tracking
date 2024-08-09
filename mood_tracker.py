@@ -4,14 +4,38 @@ from PIL import Image, ImageTk, ImageSequence
 import firebase_admin
 from firebase_admin import credentials, firestore
 from datetime import datetime, timedelta, date
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+import matplotlib.image as mpimg
+
+
+mood_values = {
+    'Angry': 0,
+    'Sad': 1,
+    'Neutral': 2,
+    'Happy': 3
+}
+
+def add_emoji(ax, emoji_path, position, size=0.1):
+
+
+    img = mpimg.imread(emoji_path)
+    imagebox = OffsetImage(img, zoom=size)
+    ab = AnnotationBbox(imagebox, position, frameon=False, pad=0)
+    ax.add_artist(ab)
+
+    image = plt.imread(emoji_path)
+    ax.imshow(image, aspect='auto', extent=(
+        position[0] - size, position[0] + size, position[1] - size, position[1] + size), zorder=10)
 
 
 # Initialize Firebase
-cred = credentials.Certificate('firebase_config/moodtrack-74b92-firebase-adminsdk-l1apr-f2afe5f732.json')
+cred = credentials.Certificate('firebase_config/moodtrack-74b92-firebase-adminsdk-l1apr-5958842968.json')
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-ALLOWED_USERS = ["akhil", "kashi", "navya", "abhinaya", "saksha", "rashmi"]
+ALLOWED_USERS = ["akhil", "kashi", "blacka", "abhinaya", "saksha", "rashmi",  "shreya"]
 mood_values = {'😊': 5, '😐': 4, '😢': 2, '😡': 0}
 
 current_user = None
@@ -130,38 +154,45 @@ def show_happiness_scale(scale):
 
     tk.Button(meter_frame, text="Back", command=meter_window.destroy, bg="black", fg="white").pack(pady=40)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def show_happy_report():
+    def apply_plot_style(ax):
+        ax.set_facecolor('black')
+        ax.spines['top'].set_color('none')
+        ax.spines['right'].set_color('none')
+        ax.spines['left'].set_color('none')
+        ax.spines['bottom'].set_color('none')
+        ax.tick_params(axis='both', which='both', colors='white')
+
     report_window = tk.Toplevel()
     report_window.title("Happy Report")
     report_window.configure(bg='black')
-
-    # Enable full screen for the report window
     report_window.attributes('-fullscreen', True)
-
-    # Allow exiting fullscreen with Escape key
     report_window.bind('<Escape>', lambda e: report_window.attributes('-fullscreen', False))
 
     report_frame = tk.Frame(report_window, bg='black')
-    report_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+    report_frame.pack(side='top', fill='both', expand=True)
 
-    tk.Label(report_frame, text=f"Happy Report for {current_user}", fg="white", bg="black", font=("Helvetica", 16, "bold")).grid(row=0, column=0, columnspan=2, pady=10)
-
-    # Define the styles for each day
-    day_styles = {
-        'Sunday': {'bg': '#ADD8E6', 'fg': 'white'},
-        'Monday': {'bg': '#FFFFE0', 'fg': 'black'},
-        'Tuesday': {'bg': '#90EE90', 'fg': 'white'},
-        'Wednesday': {'bg': '#FFA07A', 'fg': 'black'},
-        'Thursday': {'bg': '#FF6347', 'fg': 'white'},
-        'Friday': {'bg': '#FFB6C1', 'fg': 'black'},
-        'Saturday': {'bg': '#D2691E', 'fg': 'white'},
-    }
-
-    # Calculate the dates for the last 7 days including today
     today = date.today()
-    last_7_days = [today - timedelta(days=i) for i in range(7)]
+    last_7_days = [today - timedelta(days=i) for i in range(6, -1, -1)]
+    day_names = [d.strftime('%A') for d in last_7_days]
 
-    # Firestore query to get mood entries for the last 7 days
     try:
         mood_entries = db.collection('mood_data')\
                          .where('Username', '==', current_user)\
@@ -169,34 +200,65 @@ def show_happy_report():
                          .order_by('Date', direction=firestore.Query.ASCENDING)\
                          .stream()
 
-        # Create a dictionary to store mood data by date
-        mood_by_date = {d.strftime('%Y-%m-%d'): 'No data' for d in last_7_days}
+        mood_by_day = {d.strftime('%A'): 'No data' for d in last_7_days}
 
         for entry in mood_entries:
             entry_data = entry.to_dict()
             date_str = entry_data['Date']
             mood = entry_data['Mood']
-            mood_by_date[date_str] = mood
+            day_name = datetime.strptime(date_str, '%Y-%m-%d').strftime('%A')
+            mood_by_day[day_name] = mood
 
-        # Display mood data for the last 7 days with styled labels
-        for i, date_obj in enumerate(reversed(last_7_days)):
-            date_str = date_obj.strftime('%Y-%m-%d')
-            day_name = date_obj.strftime('%A')  # Get the real day name
-            mood = mood_by_date[date_str]
-            mood_emoji = mood if mood in mood_values else 'No data'
+        moods = [mood_by_day[day] for day in day_names]
+        mood_numeric = [mood_values.get(mood, -1) for mood in moods]
 
-            style = day_styles.get(day_name, {'bg': 'gray', 'fg': 'black'})  # Default style
+        fig, ax = plt.subplots(figsize=(10, 6))  # Set a figure size to better fit the plot
+        fig.patch.set_facecolor('black')
+        ax.plot(day_names, mood_numeric, marker='o', linestyle='-', color='red')
 
-            tk.Label(report_frame, text=f"{day_name}: {mood_emoji}", 
-                     fg=style['fg'], bg=style['bg'], font=("Helvetica", 12, "bold")).grid(row=i+1, column=0, columnspan=2, pady=5, padx=10, sticky="nsew")
+        apply_plot_style(ax)
+
+        emoji_paths = {
+            0: 'emojis/angry.gif',
+            1: 'emojis/sad.gif',
+            2: 'emojis/neutral.gif',
+            3: 'emojis/happy.gif'
+        }
+
+        for i, mood_val in enumerate(mood_numeric):
+            if mood_val in emoji_paths:
+                emoji_path = emoji_paths[mood_val]
+                add_emoji(ax, emoji_path, (i, mood_val), size=0.07)
+
+        ax.set_xticks(range(len(day_names)))
+        ax.set_xticklabels(day_names, color='white')
+        ax.set_yticks([0, 1, 2, 3])
+        ax.set_yticklabels(['Angry', 'Sad', 'Neutral', 'Happy'], color='white')
+        ax.set_ylim(-2, 6)
+
+        ax.set_title('Mood Over the Last 7 Days', color='white')
+        ax.grid(False)
+
+        # Adjust layout to prevent clipping of labels
+        plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
+
+        canvas = FigureCanvasTkAgg(fig, master=report_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill='both', expand=True)
 
     except Exception as e:
-        tk.Label(report_frame, text=f"Error loading report: {e}", fg="white", bg="black", font=("Helvetica", 12, "bold")).grid(row=1, column=0, columnspan=2, pady=10)
+        tk.Label(report_frame, text=f"Error loading report: {e}", fg="white", bg="black", font=("Helvetica", 12)).pack()
 
-    # Center the report_frame in the report_window
-    report_frame.place(relx=0.5, rely=0.5, anchor='center')
+    button_frame = tk.Frame(report_window, bg='black')
+    button_frame.pack(side='bottom', fill='x')
+    tk.Button(button_frame, text="Back", command=report_window.destroy, bg="black", fg="white").pack(pady=20)
 
-    tk.Button(report_frame, text="Back", command=report_window.destroy, bg="black", fg="white").grid(row=len(last_7_days)+1, column=0, columnspan=2, pady=20)
+
+
+
+
+
+
 
 def login():
     global current_user
@@ -287,7 +349,7 @@ def main_app(happiness_scale):
 
 
     tk.Button(button_frame, text="Happiness scale", command=lambda: show_happiness_scale(happiness_scale), bg="green", fg="white", font=("Helvetica", 12)).pack(side='left', padx=150)
-    tk.Button(button_frame, text="Happy Report", command=show_happy_report, bg="blue", fg="white", font=("Helvetica", 12)).pack(side='left', padx=0)
+    tk.Button(button_frame, text="Happiness Graph", command=show_happy_report, bg="blue", fg="white", font=("Helvetica", 12)).pack(side='left', padx=0)
     tk.Button(button_frame, text="Logout", command=logout, bg="red", fg="white", font=("Helvetica", 12)).pack(side='left', padx=150)
 root = tk.Tk()
 root.title("Office Mood Tracker")
