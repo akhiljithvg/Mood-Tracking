@@ -65,6 +65,8 @@ python mood_tracker.py
 ## 🧠 How It Works
 **Login**: Users enter their username to access the mood tracker. Only allowed users can proceed.
 
+![Mood Tracker](resources/gitimages/login.png)
+
 **Select Mood**: Users can log their mood by clicking on animated emojis (😊 😐 😢 😡).
 
 **View Reports**: After logging the mood, users can view their happiness scale or graph to see trends over time.
