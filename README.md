@@ -69,6 +69,8 @@ python mood_tracker.py
 
 **Select Mood**: Users can log their mood by clicking on animated emojis (😊 😐 😢 😡).
 
+![Mood Tracker](resources/gitimages/main.gif)
+
 **View Reports**: After logging the mood, users can view their happiness scale or graph to see trends over time.
 
 ## 🖼️ User Interface
