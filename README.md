@@ -1,6 +1,6 @@
 # 🌟 Office Mood Tracker
 
-![Mood Tracker](resources/main.png)
+![Mood Tracker](resources/gitimages/main.gif)
 
 ## 📝 Overview
 
