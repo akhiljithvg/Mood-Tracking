@@ -82,9 +82,14 @@ The app features a simple and intuitive interface with animated GIFs representin
 
 The happiness scale gives a quick overview of your overall happiness, with a pointer indicating your position on the scale.
 
+![Mood Tracker](resources/gitimages/scale.png)
+
 ### Happiness Graph
 
 The graph shows a weekly overview of your mood, with emojis visually representing each day's mood.
+
+![Mood Tracker](resources/gitimages/graph.png)
+
 
 ## 📦 Project Structure
 
