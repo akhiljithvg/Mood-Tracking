@@ -1,4 +1,4 @@
-# 🌟 Office Mood Tracker
+#  Office Mood Tracker
 
 ![Mood Tracker](resources/gitimages/main.gif)
 
