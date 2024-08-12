@@ -12,7 +12,6 @@ The **Office Mood Tracker** is a Python-based application that allows users to l
 - 📊 **Happiness Scale**: Get an instant happiness scale rating out of 10 based on your recent mood entries.
 - 📈 **Happiness Graph**: Visualize your mood trends over the past 7 days with a beautifully styled graph.
 - 👤 **User Login**: Secure user login with predefined usernames.
-- 🖼️ **Full-Screen Mode**: The app runs in full-screen mode with an easy escape to windowed mode.
 
 ## 🛠️ Setup & Installation
 
